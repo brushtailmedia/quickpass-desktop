@@ -1,0 +1,39 @@
+{
+  "name": "quickpass-desktop",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint:js": "eslint .",
+    "lint:rust:fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
+    "prep:tauri:dist": "node -e \"require('fs').mkdirSync('dist', { recursive: true })\"",
+    "lint:rust:clippy": "npm run prep:tauri:dist && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings",
+    "static:check": "npm run lint:js && npm run lint:rust:fmt && npm run lint:rust:clippy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:all": "npm run test && npm run test:vectors",
+    "test:vectors": "node ./scripts/vectors.test.mjs",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tauri-apps/cli": "2.1.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "5.0.0",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
+    "vite": "^7.3.3",
+    "vitest": "^4.1.6"
+  }
+}

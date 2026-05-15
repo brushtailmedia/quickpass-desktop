@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Frontend build output
+dist/
+.vite/
+
+# Tauri / Rust build artifacts
+src-tauri/target/
+src-tauri/bundle/
+src-tauri/gen/
+
+# Installer artifacts (extra safety, even though these are under target/)
+*.dmg
+*.msi
+*.deb
+*.AppImage
+*.rpm
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage output
+coverage/
+.nyc_output/
+
+# Environment/local config
+.env
+.env.local
+.env.*.local
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
