@@ -84,7 +84,14 @@ jobs:
       - name: Run test suite
         run: npm run test:all
 
-      - name: Build Tauri bundle
+      - name: Build Tauri bundle (macOS ad-hoc)
+        if: startsWith(matrix.os, 'macos-')
+        env:
+          APPLE_SIGNING_IDENTITY: "-"
+        run: npm run tauri:build
+
+      - name: Build Tauri bundle (non-macOS)
+        if: ${{ !startsWith(matrix.os, 'macos-') }}
         run: npm run tauri:build
 
       - name: Upload per-platform artifact
@@ -99,8 +106,6 @@ jobs:
             src-tauri/target/release/bundle/**/*.rpm
             src-tauri/target/release/bundle/**/*.AppImage
             src-tauri/target/release/bundle/**/*.appimage
-            src-tauri/target/release/bundle/**/*.app.tar.gz
-            src-tauri/target/release/bundle/**/*.sig
           if-no-files-found: error
 
   publish-release:
@@ -126,7 +131,7 @@ jobs:
 
           ASSET_LIST_FILE="$(mktemp)"
           find release-artifacts -type f \
-            \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.appimage' -o -name '*.app.tar.gz' -o -name '*.sig' \) \
+            \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' -o -name '*.appimage' \) \
             | sort > "$ASSET_LIST_FILE"
 
           if [ ! -s "$ASSET_LIST_FILE" ]; then

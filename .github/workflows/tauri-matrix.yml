@@ -86,7 +86,14 @@ jobs:
       - name: Run test suite
         run: npm run test:all
 
-      - name: Build Tauri bundle
+      - name: Build Tauri bundle (macOS ad-hoc)
+        if: startsWith(matrix.os, 'macos-')
+        env:
+          APPLE_SIGNING_IDENTITY: "-"
+        run: npm run tauri:build
+
+      - name: Build Tauri bundle (non-macOS)
+        if: ${{ !startsWith(matrix.os, 'macos-') }}
         run: npm run tauri:build
 
       - name: Upload bundle artifacts
@@ -101,6 +108,4 @@ jobs:
             src-tauri/target/release/bundle/**/*.rpm
             src-tauri/target/release/bundle/**/*.AppImage
             src-tauri/target/release/bundle/**/*.appimage
-            src-tauri/target/release/bundle/**/*.app.tar.gz
-            src-tauri/target/release/bundle/**/*.sig
           if-no-files-found: error
