@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
-## [1.0.0] - 2026-05-15
+## [1.0.0] - 2026-05-16
 
 First public `v1` release of the standalone QuickPass desktop app after long-term private use.
 
