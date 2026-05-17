@@ -9,6 +9,8 @@ Project repo: [brushtailmedia/quickpass-desktop](https://github.com/brushtailmed
 
 Download pre-built binaries from [Releases](https://github.com/brushtailmedia/quickpass-desktop/releases).
 
+![QuickPass Desktop](docs/images/quickpass-desktop-main.webp)
+
 ## What It Is
 
 QuickPass originally started as a Python Tkinter desktop app which I have used privately for many years now. QuickPass Desktop is the native-app edition for macOS/Windows/Linux. There is also a standalone single HTML file version available at [brushtailmedia/quickpass-standalone](https://github.com/brushtailmedia/quickpass-standalone).
