@@ -31,10 +31,13 @@ body {
 
 #root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
 }
 
 .window {
@@ -214,6 +217,10 @@ input[type="radio"] {
   margin-bottom: 10px;
 }
 
+.length-heading {
+  margin: 0 0 8px;
+}
+
 .radio-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(160px, 1fr));
@@ -252,6 +259,8 @@ input[type="radio"] {
   font-weight: 600;
 }
 
+
+
 @keyframes card-in {
   from {
     opacity: 0;
@@ -266,6 +275,14 @@ input[type="radio"] {
 @media (max-width: 760px) {
   .window {
     padding: 14px;
+  }
+
+  /* 16px stops iOS auto-zoom on focus; taller controls for touch. */
+  .field-input,
+  select,
+  button {
+    font-size: 16px;
+    padding: 12px;
   }
 
   .title-row {

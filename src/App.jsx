@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { clear as tauriClear, writeSecret as tauriWriteSecret } from '@tauri-apps/plugin-clipboard-manager';
 import { VERSION_DICT, passGen } from './core.js';
 
 const VERSION_KEYS = Object.keys(VERSION_DICT);
+
+const isTauri = () => '__TAURI_INTERNALS__' in window;
 
 function fallbackCopy(text) {
   const ta = document.createElement('textarea');
@@ -20,6 +23,17 @@ function fallbackCopy(text) {
 }
 
 async function writeClipboardText(text) {
+  // Native clipboard via Tauri: navigator.clipboard is unreliable in Android WebView.
+  // writeSecret marks the clip sensitive on Android and local-only on iOS.
+  if (isTauri()) {
+    try {
+      await tauriWriteSecret(text);
+      return;
+    } catch {
+      // Fall through to the web clipboard paths.
+    }
+  }
+
   if (navigator.clipboard && window.isSecureContext) {
     try {
       await navigator.clipboard.writeText(text);
@@ -31,6 +45,20 @@ async function writeClipboardText(text) {
   }
 
   fallbackCopy(text);
+}
+
+async function clearClipboardText() {
+  // Native clear removes the clip outright, so Android shows no "Copied" toast.
+  if (isTauri()) {
+    try {
+      await tauriClear();
+      return;
+    } catch {
+      // Fall through to the web clipboard paths.
+    }
+  }
+
+  await writeClipboardText('');
 }
 
 export default function App() {
@@ -50,7 +78,20 @@ export default function App() {
   const [copyEnabled, setCopyEnabled] = useState(false);
   const [clearEnabled, setClearEnabled] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [clipboardPending, setClipboardPending] = useState(false);
   const [status, setStatus] = useState('Welcome to QuickPass');
+
+  // Mask both password fields whenever the app loses focus (app switch, call, etc.).
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        setShowMaster(false);
+        setShowSitePassword(false);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, []);
 
   const clearPasswordField = () => {
     setSitePassword('');
@@ -64,6 +105,22 @@ export default function App() {
     setSiteName('');
     setMasterPassword('');
     setShowMaster(false);
+    clearPasswordField();
+  };
+
+  const clearClipboardContents = async () => {
+    await clearClipboardText();
+    setClipboardPending(false);
+    setClearEnabled(false);
+    setStatus('Password Cleared from Clipboard');
+  };
+
+  // Any edit after a copy clears the stale password from the clipboard but keeps the form,
+  // so a mistyped site name can be fixed without retyping the master password.
+  const onEdit = () => {
+    if (clipboardPending) {
+      void clearClipboardContents();
+    }
     clearPasswordField();
   };
 
@@ -83,15 +140,13 @@ export default function App() {
 
     setClearEnabled(true);
     setCopied(true);
+    setClipboardPending(true);
     setStatus('Password Copied to Clipboard');
   };
 
   const clearClipboard = async () => {
-    await writeClipboardText('');
-
+    await clearClipboardContents();
     reset();
-    setClearEnabled(false);
-    setStatus('Password Cleared from Clipboard');
   };
 
   return (
@@ -117,7 +172,7 @@ export default function App() {
               if (!checked) {
                 setFullSpecialChars(false);
               }
-              clearPasswordField();
+              onEdit();
             }}
           />
           s/char
@@ -129,10 +184,14 @@ export default function App() {
         <input
           className="field-input"
           placeholder="e.g. github, github/work, or user@example.com"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           value={siteName}
           onChange={(e) => {
             setSiteName(e.target.value.toLowerCase());
-            clearPasswordField();
+            onEdit();
           }}
         />
         <div />
@@ -142,14 +201,14 @@ export default function App() {
           className="field-input"
           type={showMaster ? 'text' : 'password'}
           placeholder="mysupersecretpassword"
-          autoComplete="new-password"
+          autoComplete="current-password"
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
           value={masterPassword}
           onChange={(e) => {
             setMasterPassword(e.target.value);
-            clearPasswordField();
+            onEdit();
           }}
         />
         <label className="checkbox-inline">
@@ -202,19 +261,20 @@ export default function App() {
               disabled={!specialChars}
               onChange={(e) => {
                 setFullSpecialChars(e.target.checked);
-                clearPasswordField();
+                onEdit();
               }}
             />
             Allow all special characters
           </label>
 
-          <div className="radio-grid">
-            <label><input type="radio" name="chars" checked={passwordLength === 8} onChange={() => { setPasswordLength(8); clearPasswordField(); }} />8 Characters</label>
-            <label><input type="radio" name="chars" checked={passwordLength === 10} onChange={() => { setPasswordLength(10); clearPasswordField(); }} />10 Characters</label>
-            <label><input type="radio" name="chars" checked={passwordLength === 15} onChange={() => { setPasswordLength(15); clearPasswordField(); }} />15 Characters</label>
-            <label><input type="radio" name="chars" checked={passwordLength === 20} onChange={() => { setPasswordLength(20); clearPasswordField(); }} />20 Characters</label>
-            <label><input type="radio" name="chars" checked={passwordLength === 32} onChange={() => { setPasswordLength(32); clearPasswordField(); }} />32 Characters</label>
-            <label><input type="radio" name="chars" checked={passwordLength === 40} onChange={() => { setPasswordLength(40); clearPasswordField(); }} />40 Characters</label>
+          <div className="field-label length-heading" id="length-heading">Change password output length:</div>
+          <div className="radio-grid" role="radiogroup" aria-labelledby="length-heading">
+            <label><input type="radio" name="chars" checked={passwordLength === 8} onChange={() => { setPasswordLength(8); onEdit(); }} />8 Characters</label>
+            <label><input type="radio" name="chars" checked={passwordLength === 10} onChange={() => { setPasswordLength(10); onEdit(); }} />10 Characters</label>
+            <label><input type="radio" name="chars" checked={passwordLength === 15} onChange={() => { setPasswordLength(15); onEdit(); }} />15 Characters</label>
+            <label><input type="radio" name="chars" checked={passwordLength === 20} onChange={() => { setPasswordLength(20); onEdit(); }} />20 Characters</label>
+            <label><input type="radio" name="chars" checked={passwordLength === 32} onChange={() => { setPasswordLength(32); onEdit(); }} />32 Characters</label>
+            <label><input type="radio" name="chars" checked={passwordLength === 40} onChange={() => { setPasswordLength(40); onEdit(); }} />40 Characters</label>
           </div>
 
           <div className="version-row">
@@ -223,7 +283,7 @@ export default function App() {
               value={version}
               onChange={(e) => {
                 setVersion(e.target.value);
-                clearPasswordField();
+                onEdit();
               }}
             >
               {VERSION_KEYS.map((key) => (

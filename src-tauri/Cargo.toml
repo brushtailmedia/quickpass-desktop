@@ -1,6 +1,6 @@
 [package]
 name = "quickpass_tauri"
-version = "1.0.0"
+version = "1.1.0"
 description = "QuickPass desktop app"
 authors = ["QuickPass"]
 edition = "2021"
@@ -10,6 +10,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+tauri-plugin-clipboard-manager = "2"
 
 [features]
 default = ["custom-protocol"]

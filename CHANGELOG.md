@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project follows Semantic Versioning.
 
+## [1.1.0] - 2026-11-13
+
+Security hardening.
+
+### Added
+- Clipboard is cleared when the app exits (window close or Cmd+Q), as the original Tkinter app did. Implemented in Rust on `RunEvent::ExitRequested`; a crash or kill does not run it.
+- Copy uses the clipboard plugin's `writeSecret`, which asks clipboard managers to skip the entry: `org.nspasteboard.ConcealedType` on macOS (Paste, Alfred, Raycast, Maccy honour it) and exclude-from-monitoring on Windows (keeps it out of Win+V history and cloud clipboard sync). Clears use the native `clear`.
+- Editing any field after a copy clears the stale password from the clipboard; the form is kept so a mistyped site name can be fixed without retyping.
+- Both "show" toggles turn off when the window is hidden or minimised.
+- "Change password output length:" heading above the length options in Extras.
+- `src-tauri/capabilities/default.json` granting `core:default`, `clipboard-manager:allow-write-secret`, `clipboard-manager:allow-clear`.
+- Content Security Policy `default-src 'self'; connect-src ipc: http://ipc.localhost`, with a looser `devCsp` for Vite HMR.
+
+### Fixed
+- Site name input no longer autocorrects, autocapitalizes or spellchecks (macOS WebKit autocorrect could silently change the output).
+- Master password uses `autoComplete="current-password"` so macOS stops offering "Use Strong Password", which would replace the master password with a random one.
+
+### Changed
+- Tauri crates and npm packages updated to 2.12.x; `@tauri-apps/api` and `@tauri-apps/plugin-clipboard-manager` added.
+- Version 1.1.0.
+
 ## [1.0.0] - 2026-05-16
 
 First public `v1` release of the standalone QuickPass desktop app after long-term private use.

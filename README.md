@@ -13,7 +13,11 @@ Download pre-built binaries from [Releases](https://github.com/brushtailmedia/qu
 
 ## What It Is
 
-QuickPass originally started as a Python Tkinter desktop app which I have used privately for many years now. QuickPass Desktop is the native-app edition for macOS/Windows/Linux. There is also a standalone single HTML file version available at [brushtailmedia/quickpass-standalone](https://github.com/brushtailmedia/quickpass-standalone).
+QuickPass originally started as a Python Tkinter desktop app which I have used privately for many years now. QuickPass Desktop is the native-app edition for macOS/Windows/Linux.
+
+Android & IOS version available at [brushtailmedia/quickpass-app](https://github.com/brushtailmedia/quickpass-app).
+Standalone single HTML file version available at [brushtailmedia/quickpass-standalone](https://github.com/brushtailmedia/quickpass-standalone).
+
 
 - Local-first deterministic password generation
 - No account system
@@ -181,11 +185,14 @@ npm run test:vectors
 - The app code does not use browser storage APIs (`localStorage`, `sessionStorage`, `IndexedDB`).
 - No application backend is required.
 - Master password is not persisted by app logic.
-- Clipboard is explicit: copy requires user action; clear writes an empty value to clipboard.
+- Clipboard is explicit: copy requires user action. The clipboard is cleared by the Clear Clipboard button, by editing any field after a copy, by the next copy, and when the app exits (window close or Cmd+Q). A crash or forced kill does not clear it.
+- Copy uses the Tauri clipboard plugin's `writeSecret`, which marks the entry for clipboard managers to skip (macOS `ConcealedType`; Windows exclude-from-monitoring, which also keeps it out of Win+V history and cloud sync). Granted permissions beyond `core:default`: `clipboard-manager:allow-write-secret`, `clipboard-manager:allow-clear`.
+- Both "show" toggles turn off whenever the window is hidden or minimised; the form itself is kept so a mistyped site name can be fixed without retyping.
+- Content Security Policy is `default-src 'self'; connect-src ipc: http://ipc.localhost` (`src-tauri/tauri.conf.json`). Dev builds use a looser `devCsp` for Vite HMR.
 
 ## Known Risks
 
-- Clipboard history managers may retain copied passwords.
+- Clipboard managers that ignore the "concealed" hint may still retain copied passwords. macOS Universal Clipboard has no local-only flag, so a copied password reaches a signed-in iPhone or iPad until cleared.
 - Malware/keyloggers can bypass application-level protections.
 
 ## Project Structure
